@@ -4,7 +4,7 @@
  * Class: CSCI 2160-940
  * Project: Project 3
  * Date: 12/7/20
- * Purpose: calls an inline ADD assembly function
+ * Purpose: calls an inline ADD assembly function, added comment
  *********************************************************************************/
 
 #include "proj3Logic.h"
