@@ -1,21 +1,27 @@
 /**********************************************************************************
- * Program Name: Instruction Decoding Simulator
+ * Program Name: Instruction Fetch/Decoding/Execution Simulator
  * Programmer: Hunter Page
  * Class: CSCI 2160-940
  * Lab: Instruction Decoding Simulator
  * Date: 12/2/20
- * Purpose: This program takes a pep/9 program's level three code and, using ARM
- *			assembly, decode the instruction and each of its parts, revealing the
- *		    Instruction specifier, register and address used, and its operand. The 
- * 			ARM methods transform the instuction from ascii, then perform shifts 
- *			on the instruction to discover each piece. Then the program prints a nice
- *			layout of the instruction and its pieces, as well as some final statistics. 
+ * Purpose: This program is going to be repurposed to rather than fetch and decode hex code
+ *          for a pep9 program, it will now execute said code and be able to read a program
+ * 			either through hex or actual pep9 instructions passed in through a file. The use of 
+ * 			assembly language will be removed, as I want to focus on an all-C implementation
+ * 			that will create a more concise and clean program. There will be multiple 
+ * 			functions planned aside from just execution. The original functionality of decoding
+ * 			and displaying stats will still be present. There is also thought of adding an
+ * 			editing feature that will allow the user to edit their code in the future.
+ * 			Possibly using a C# interface. For now, this will work as a strict executor 
+ * 			, starting with reading hex from a file. 
  **********************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "proj3Logic.h"
+#include "programinfo.h"
+#include "commands.h"
 
 extern unsigned hexChecker(unsigned x, unsigned y, unsigned z);  //validates the instruction read in
 extern unsigned hexConverter(unsigned x, unsigned y);	//Converts the number from ascii values to literal hex
@@ -26,90 +32,20 @@ extern unsigned addressMode(unsigned x, unsigned y);   //finds the addressing mo
 extern int inlineADD(int x, int y);   //performs an inline add arm instruction
 
 //holds all of the code used to collect each piece of information on the instruction and prints it out
-int main(void)
+int main(int argc, const char* argv[])
 {
-	int totalUnaryInstructions = 0; //unary
-	int totalnonUInstructions = 0; //nonunary
-	
-	int totControlInstrct = 0; //control
-	int totALUInstrct = 0; //arithmetic
-	int totTrapInstrct = 0; //trap
-	int totMemInstrct = 0;  //memory
-	
-	int immUsed = 0;  //immediate
-	int dirUsed = 0;  //direct
-	int indirUsed = 0;  //indirect
-	int stkRUsed = 0;  //stack relative
-	int stkRDUsed = 0;  //stack-relative deferred
-	int indxUsed = 0; //indexed 
-	int stkIndxUsed = 0; //stack-indexed
-	int stkdfrdIndxUsed = 0;  //stack-deffered indexed
-	
-	int memReferences = 0; //memory references
-	
-	
+	struct programInfo info;
+	struct commands commands;
+
+	//add the info needed to read in pep9
+	addCommands(commands.instructions);
+	addAddresses(commands.instructType);
+	addAddresses(commands.addressType);
+
+	FILE* inputFile = fopen(argv[1], "r"); //sets up the input file for reading
+
+	if(argv[1] == )
 	char *hexInput = malloc(1); //location of where the user input is being stored
-	const char *instructions[39];  //list of all the possible instructions that the program could read
-	
-	//unary
-	instructions[0] = "ROR";
-	instructions[1] = "MOVAFLG";
-	instructions[2] = "MOVFLGA";
-	instructions[3] = "MOVSPA";
-	instructions[4] = "RETTR";
-	instructions[5] = "RET";
-	instructions[6] = "STOP";
-	instructions[7] = "NOT";
-	instructions[8] = "NEG";
-	instructions[9] = "ASL";
-	instructions[10] = "ASR";
-	instructions[11] = "ROL";
-	
-	//nonunary
-	instructions[12] = "BR";
-	instructions[13] = "BRLE";
-	instructions[14] = "BRLT";
-	instructions[15] = "BREQ";
-	instructions[16] = "BRNE";
-	instructions[17] = "BRGE";
-	instructions[18] = "BRGT";
-	instructions[19] = "BRV";
-	instructions[20] = "BRC";
-	instructions[21] = "CALL";
-	instructions[22] = "NOP";
-	instructions[23] = "DECI";
-	instructions[24] = "DECO";
-	instructions[25] = "HEXO";
-	instructions[26] = "STRO";
-	instructions[27] = "ADDSP";
-	instructions[28] = "SUBSP";
-	instructions[29] = "ADD";
-	instructions[30] = "SUB";
-	instructions[31] = "AND";
-	instructions[32] = "OR";
-	instructions[33] = "CPW";
-	instructions[34] = "CPB";
-	instructions[35] = "LDW";
-	instructions[36] = "LDB";
-	instructions[37] = "STW";
-	instructions[38] = "STB";
-	
-	const char *instructType[4];  //list of all the types an instruction can be
-	instructType[0] = "Memory";
-	instructType[1] = "Control";
-	instructType[2] = "ALU";
-	instructType[3] = "Trap";
-	
-	const char *addressType[8];  //list of all the possible addresses an instruction could use
-	addressType[0] = "i";
-	addressType[1] = "d";
-	addressType[2] = "n";
-	addressType[3] = "s";
-	addressType[4] = "sf";
-	addressType[5] = "x";
-	addressType[6] = "sx";
-	addressType[7] = "sfx";
-	addressType[8] = "U";
 
 	printf("Please enter pep9 hex instructions, separated by one space: "); //ask use for the instructions
 	
@@ -216,7 +152,7 @@ int main(void)
 				if(mnemNum >= 12 && mnemNum <= 21)
 				{
 					addressNum = addressMode((unsigned)command, 0);
-					memReferences = inlineADD(memReferences, 1);  //increment memory reference
+					info.memReferences = inlineADD(memReferences, 1);  //increment memory reference
 				}
 				else if(mnemNum >= 22 && mnemNum <= 38)
 				{
